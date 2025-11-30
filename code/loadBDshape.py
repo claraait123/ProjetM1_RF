@@ -6,7 +6,8 @@ from typing import List, Dict, Any
 # ================================
 # CONFIGURATION
 # ================================
-BASE_DIR = Path("/Users/MariaAydin1/Documents/M1_VMI_25_26/semestre1/Intro_Reconnaissance_Formes/projet")  # Dossier courant, ou remplace par ton chemin
+THIS_DIR = Path(__file__).resolve().parent
+BASE_DIR = THIS_DIR.parent / "BDD"  # Dossier courant
 
 METHODES = ['E34', 'GFD', 'SA', 'F0', 'F2']
 
@@ -116,7 +117,3 @@ data = samples_to_arrays(samples)
 print(f"\nExemple : {samples[0]['id']}")
 print(f"  Classe : {samples[0]['class']}")
 print(f"  E34 (premiers 5) : {samples[0]['E34'][:5]}")
-
-print(f"\nMatrice E34 : {data['E34'].shape} → prêt pour k-NN !")
-
-
