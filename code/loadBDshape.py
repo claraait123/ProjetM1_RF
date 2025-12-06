@@ -22,7 +22,7 @@ METHOD_DIRS = {
 
 METHODES_DIM = {
     'E34': 16,
-    'GFD': 36,
+    'GFD': 100,
     'SA':  90,
     'F0':  128,
     'F2':  128
