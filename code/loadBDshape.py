@@ -116,4 +116,4 @@ data = samples_to_arrays(samples)
 
 print(f"\nExemple : {samples[0]['id']}")
 print(f"  Classe : {samples[0]['class']}")
-print(f"  E34 (premiers 5) : {samples[0]['E34'][:5]}")
+print(f"  E34 (5 premiers) : {samples[0]['E34'][:5]}")
