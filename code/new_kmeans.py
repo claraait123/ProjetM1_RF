@@ -84,8 +84,16 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
     for cluster_id in range(k_clusters):
         mask = (kmeans.labels_ == cluster_id)
         if mask.sum() > 0:
-            most_common = np.bincount(y_train[mask]).argmax()
+            #most_common = np.bincount(y_train[mask]).argmax()
+            #cluster_to_class[cluster_id] = most_common
+
+            unique_labels, counts = np.unique(y_train[mask], return_counts=True)
+            if len(unique_labels) > 0:
+                most_common = unique_labels[np.argmax(counts)]
+            else:
+                most_common = -1
             cluster_to_class[cluster_id] = most_common
+
         else:
             cluster_to_class[cluster_id] = -1  # cluster vide → on ignorera
 

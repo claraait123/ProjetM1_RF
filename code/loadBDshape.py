@@ -62,7 +62,7 @@ def load_bdshape_data() :
             img_id, ext = filename.split('.', 1)
 
             class_str = img_id[1:3]
-            class_id = int(class_str) - 1  # 0 à 8
+            class_id = int(class_str)  # 1 à 9
 
             vector = read_met_file(file_path)
 
