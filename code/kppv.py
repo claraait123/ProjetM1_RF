@@ -40,6 +40,7 @@ for methode in METHODES:
     # Decoupage de la BDD : 60 / 20 / 20 
     n = len(X)
     indices = np.arange(n)
+    np.random.seed(0)
     np.random.shuffle(indices)
 
     n_train = int(0.6 * n)
