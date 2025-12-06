@@ -114,6 +114,10 @@ def samples_to_arrays(samples: List[Dict]) -> Dict[str, np.ndarray]:
 samples = load_bdshape_data()
 data = samples_to_arrays(samples)
 
-print(f"\nExemple : {samples[0]['id']}")
+print(f"\nExemple : id : {samples[0]['id']}")
 print(f"  Classe : {samples[0]['class']}")
 print(f"  E34 (5 premiers) : {samples[0]['E34'][:5]}")
+print(f"  GFD (5 premiers) : {samples[0]['GFD'][:5]}")
+print(f"  SA (5 premiers) : {samples[0]['SA'][:5]}")
+print(f"  F0 (5 premiers) : {samples[0]['F0'][:5]}")
+print(f"  F2 (5 premiers) : {samples[0]['F2'][:5]}")
