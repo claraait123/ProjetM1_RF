@@ -2,26 +2,19 @@ import os
 import sys
 import numpy as np
 
+# === chemin vers code/ ===
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 CODE_DIR = os.path.join(CURRENT_DIR, "..", "code")
 sys.path.append(CODE_DIR)
 
 from loadBDshape import data
 from kppv import k_plus_proches_voisins
-from new_kmeans import KMeans
-
+from kmeans_v2 import kmeans_clustering, predict_kmeans
 
 METHODES = ['E34', 'GFD', 'SA', 'F0', 'F2']
 
 
 def confusion_matrix(y_true, y_pred, n_classes=None):
-    """
-    Calcule la matrice de confusion.
-    y_true, y_pred : vecteurs d'étiquettes
-    n_classes : nombre de classes (si None, inféré à partir des données)
-    Retour : matrice (n_classes, n_classes) où
-             M[i, j] = nb d'exemples de classe i prédits comme j.
-    """
     y_true = np.asarray(y_true, dtype=int)
     y_pred = np.asarray(y_pred, dtype=int)
 
@@ -38,13 +31,8 @@ def confusion_matrix(y_true, y_pred, n_classes=None):
 
     return M
 
+
 def evaluation_from_confusion(M):
-    """
-    Calcule précision, rappel, F1 par classe, F1 moyenne.
-    M : matrice de confusion (n_classes, n_classes)
-    Retour :
-      precisions, rappels, f1s, f1_macro
-    """
     n_classes = M.shape[0]
     precisions = np.zeros(n_classes)
     rappels = np.zeros(n_classes)
@@ -68,27 +56,19 @@ def evaluation_from_confusion(M):
 
 
 def accuracy_score(y_true, y_pred):
-    """
-    Taux de bonne classification global.
-    """
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
     return np.mean(y_true == y_pred)
 
 
-# KPPV
+# =====================
+#   KPPV
+# =====================
 
 def evaluation_kppv(methode, k=1, seed=0):
-    """
-    Exemple d'évaluation pour kPPV :
-      - découpage 60/20/20 comme dans ton kppv.py
-      - on utilise le meilleur k (en entrée ou déterminé à part) pour la base de test
-      - on calcule matrice de confusion, F-mesure, accuracy
-    """
     X = data[methode]
     y = data['labels']
 
-    # Séparation de la BDD
     n = len(X)
     indices = np.arange(n)
     np.random.seed(seed)
@@ -102,10 +82,7 @@ def evaluation_kppv(methode, k=1, seed=0):
     test_idx = indices[n_train + n_valid:]
 
     X_train, y_train = X[train_idx], y[train_idx]
-    X_valid, y_valid = X[valid_idx], y[valid_idx]
-    X_test, y_test = X[test_idx], y[test_idx]
-
-
+    X_test,  y_test  = X[test_idx],  y[test_idx]
 
     print(f"\n=== Évaluation kPPV sur {methode} (k={k}) ===")
 
@@ -120,57 +97,53 @@ def evaluation_kppv(methode, k=1, seed=0):
     print("F1 par classe :", np.round(f1s, 3))
     print(f"F1 macro = {f1_macro:.3f}")
 
-    return None
+    return acc, M, f1s, f1_macro
 
 
+# =====================
+#   K-MEANS 
+# =====================
 
-# K MEANS
-
-def evaluation_kmeans(methode, k_clusters=9, test_ratio=0.2, seed=42):
-    """
-    Évaluation pour K-means :
-      - découpe train / test
-      - apprentissage non supervisé sur train
-      - association cluster -> classe par vote majoritaire (train)
-      - prédiction classe sur test
-      - calcul matrice de confusion, F-mesure, accuracy
-    """
+def evaluation_kmeans(methode, k_clusters=9, test_ratio=0.2, random_state=42):
     X = data[methode]
     y_true = data['labels']
 
-    # Séparation de la BDD
     n = len(X)
-    np.random.seed(seed)
+    np.random.seed(random_state)
     indices = np.random.permutation(n)
 
     n_test = int(test_ratio * n)
-    test_idx = indices[:n_test]
+    test_idx  = indices[:n_test]
     train_idx = indices[n_test:]
 
     X_train, y_train = X[train_idx], y_true[train_idx]
-    X_test, y_test = X[test_idx], y_true[test_idx]
+    X_test,  y_test  = X[test_idx],  y_true[test_idx]
 
     print(f"\n=== Évaluation K-means sur {methode} (k={k_clusters}) ===")
 
-    kmeans = KMeans(k=k_clusters, max_iters=300, random_state=seed)
-    kmeans.fit(X_train)
+    # 1. Clustering non supervisé sur le train
+    centroids, train_cluster_labels = kmeans_clustering(
+        X_train, k=k_clusters, max_it=200, random_state=random_state
+    )
 
-    # Prédiction des clusters sur le test
-    y_pred_clusters = kmeans.predict(X_test)
-
-    # Association cluster -> classe réelle par vote majoritaire sur le train
+    # 2. Mapping cluster → classe par vote majoritaire (train)
     cluster_to_class = {}
     for cluster_id in range(k_clusters):
-        mask = (kmeans.labels_ == cluster_id)
+        mask = (train_cluster_labels == cluster_id)
         if mask.sum() > 0:
-            most_common = np.bincount(y_train[mask]).argmax()
+            unique_labels, counts = np.unique(y_train[mask], return_counts=True)
+            most_common = unique_labels[np.argmax(counts)]
             cluster_to_class[cluster_id] = most_common
         else:
             cluster_to_class[cluster_id] = -1  # cluster vide
 
-    # Conversion cluster -> classe
-    y_pred = np.array([cluster_to_class.get(c, -1) for c in y_pred_clusters])
+    # 3. Prédiction sur le test
+    test_cluster_labels = predict_kmeans(X_test, centroids)
 
+    # 4. Conversion cluster → classe
+    y_pred = np.array([cluster_to_class.get(c, -1) for c in test_cluster_labels])
+
+    # 5. Metrics
     acc = accuracy_score(y_test, y_pred)
     M = confusion_matrix(y_test, y_pred, n_classes=9)
     precisions, rappels, f1s, f1_macro = evaluation_from_confusion(M)
@@ -181,11 +154,9 @@ def evaluation_kmeans(methode, k_clusters=9, test_ratio=0.2, seed=42):
     print(f"F1 macro = {f1_macro:.3f}")
     print("Mapping clusters -> classes :", cluster_to_class)
 
-    return None
+    return acc, M, f1s, f1_macro, cluster_to_class
 
 
-if __name__ == "__main__":
-
-    for meth in METHODES:
-        _ = evaluation_kppv(meth, k=1, seed=0)
-        _ = evaluation_kmeans(meth, k_clusters=20, test_ratio=0.2, seed=42)
+for meth in METHODES:
+    _ = evaluation_kppv(meth, k=1, seed=0)
+    _ = evaluation_kmeans(meth, k_clusters=9, test_ratio=0.2, random_state=42)
