@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 def euclidean_distance(X, centroids):
     return np.sqrt(((X[:, np.newaxis] - centroids) ** 2).sum(axis=2))
 
+def manhattan_distance(X, centroids):
+        return (np.abs((X[:, np.newaxis] - centroids))).sum(axis=2)
+
 def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
     if random_state is not None :
@@ -38,7 +41,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
 def predict_kmeans(X_test, centroids):
     """Prédit le cluster le plus proche pour de nouvelles données"""
-    distances = np.sqrt(((X_test[:, np.newaxis] - centroids) ** 2).sum(axis=2))
+    distances = euclidean_distance(X_test, centroids)
     return np.argmin(distances, axis=1)
 
 
@@ -94,9 +97,12 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
 # ===================================================================
 # Lancement sur toutes les méthodes
 # ===================================================================
-if __name__ == "__main__":
-    methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
-    print("=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
-    for meth in methodes:
-        evaluate_kmeans_on_method(method=meth, k_clusters=9, test_ratio=0.2, random_state=42)
-        print("-" * 70)
+methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
+print("=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
+for meth in methodes:
+    evaluate_kmeans_on_method(method=meth, k_clusters=9, test_ratio=0.2, random_state=42)
+    print("-" * 70)
+
+
+
+
