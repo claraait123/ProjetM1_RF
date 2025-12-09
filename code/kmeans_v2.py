@@ -45,6 +45,21 @@ def predict_kmeans(X_test, centroids):
     return np.argmin(distances, axis=1)
 
 
+
+
+def simple_pca(X, n_components=2):
+    """Réduction de dimension simple via PCA avec SVD (pour visualisation 2D)"""
+    # Centrage des données
+    X_centered = X - np.mean(X, axis=0)
+    # SVD
+    U, S, Vt = np.linalg.svd(X_centered, full_matrices=False)
+    # Projection sur les n premiers composants
+    components = Vt[:n_components]
+    X_reduced = np.dot(X_centered, components.T)
+    return X_reduced
+
+
+
 def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random_state=42):
     X = data[method]
     y_true = data['labels']          # maintenant 1 à 9
@@ -90,6 +105,25 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
     print(f"{method} + K-means (k={k_clusters}) → Accuracy test = {accuracy:.3f}")
     print(f"   Mapping clusters → classes : {cluster_to_class}")
 
+
+
+
+
+    # --- Visualisation des clusters en 2D via PCA ---
+    if X_train.shape[1] > 2:  # Réduction si dim > 2
+        X_train_2d = simple_pca(X_train, n_components=2)
+    else:
+        X_train_2d = X_train  # Si déjà 2D ou moins
+
+    plt.figure(figsize=(8, 6))
+    scatter = plt.scatter(X_train_2d[:, 0], X_train_2d[:, 1], c=train_cluster_labels, cmap='viridis', alpha=0.7)
+    plt.colorbar(scatter, label='Cluster ID')
+    plt.title(f'Visualisation des clusters K-means (k={k_clusters}) - {method} (PCA 2D)')
+    plt.xlabel('Composante Principale 1')
+    plt.ylabel('Composante Principale 2')
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
     return accuracy, cluster_to_class
 
 
@@ -100,7 +134,7 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
 methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
 print("=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
 for meth in methodes:
-    evaluate_kmeans_on_method(method=meth, k_clusters=9, test_ratio=0.2, random_state=42)
+    evaluate_kmeans_on_method(method=meth, k_clusters=15, test_ratio=0.2, random_state=42)
     print("-" * 70)
 
 
