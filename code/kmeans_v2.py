@@ -19,6 +19,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
     centroids = np.random.uniform(np.amin(X, axis=0), np.amax(X, axis=0), size=(k, X.shape[1])) #shape of data point is the centroid.
 
     for it in range(max_it) : 
+        
         distances = euclidean_distance(X, centroids)
         labels = np.argmin(distances, axis=1) #cluster numéro
 
@@ -60,7 +61,7 @@ def simple_pca(X, n_components=2):
 
 
 
-def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random_state=42):
+def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random_state=42, aff=False):
     X = data[method]
     y_true = data['labels']          # maintenant 1 à 9
 
@@ -102,27 +103,28 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
 
     # 5. Accuracy
     accuracy = np.mean(y_pred == y_test)
-    print(f"{method} + K-means (k={k_clusters}) → Accuracy test = {accuracy:.3f}")
-    print(f"   Mapping clusters → classes : {cluster_to_class}")
+    if aff :
+        print(f"{method} + K-means (k={k_clusters}) → Accuracy test = {accuracy:.3f}")
+        print(f"   Mapping clusters → classes : {cluster_to_class}")
 
 
 
 
+    if aff :
+        # --- Visualisation des clusters en 2D via PCA ---
+        if X_train.shape[1] > 2:  # Réduction si dim > 2
+            X_train_2d = simple_pca(X_train, n_components=2)
+        else:
+            X_train_2d = X_train  # Si déjà 2D ou moins
 
-    # --- Visualisation des clusters en 2D via PCA ---
-    if X_train.shape[1] > 2:  # Réduction si dim > 2
-        X_train_2d = simple_pca(X_train, n_components=2)
-    else:
-        X_train_2d = X_train  # Si déjà 2D ou moins
-
-    plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(X_train_2d[:, 0], X_train_2d[:, 1], c=train_cluster_labels, cmap='viridis', alpha=0.7)
-    plt.colorbar(scatter, label='Cluster ID')
-    plt.title(f'Visualisation des clusters K-means (k={k_clusters}) - {method} (PCA 2D)')
-    plt.xlabel('Composante Principale 1')
-    plt.ylabel('Composante Principale 2')
-    plt.grid(True, alpha=0.3)
-    plt.show()
+        plt.figure(figsize=(8, 6))
+        scatter = plt.scatter(X_train_2d[:, 0], X_train_2d[:, 1], c=train_cluster_labels, cmap='viridis', alpha=0.7)
+        plt.colorbar(scatter, label='Cluster ID')
+        plt.title(f'Visualisation des clusters K-means (k={k_clusters}) - {method} (PCA 2D)')
+        plt.xlabel('Composante Principale 1')
+        plt.ylabel('Composante Principale 2')
+        plt.grid(True, alpha=0.3)
+        plt.show()
 
     return accuracy, cluster_to_class
 
@@ -131,12 +133,32 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
 # ===================================================================
 # Lancement sur toutes les méthodes
 # ===================================================================
-methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
+"""methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
 print("=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
 for meth in methodes:
     evaluate_kmeans_on_method(method=meth, k_clusters=15, test_ratio=0.2, random_state=42)
     print("-" * 70)
+"""
 
+methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
+print("=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
+
+best_results = {}
+for meth in methodes:
+    best_acc = -1
+    best_k = None
+    for k in range(2, 26):  # de 2 à 25
+        acc, _ = evaluate_kmeans_on_method(method=meth, k_clusters=k, test_ratio=0.2, random_state=42)
+        if acc > best_acc:
+            best_acc = acc
+            best_k = k
+    best_results[meth] = (best_k, best_acc)
+    
+    # Affichage du meilleur
+    print(f"Meilleur résultat pour {meth}: k={best_k}, Accuracy={best_acc:.3f}")
+    # Appel pour afficher le print et le plot du meilleur
+    evaluate_kmeans_on_method(method=meth, k_clusters=best_k, test_ratio=0.2, random_state=42, aff=True)
+    print("-" * 70)
 
 
 
