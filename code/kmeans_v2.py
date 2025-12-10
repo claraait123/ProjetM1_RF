@@ -23,7 +23,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
     for it in range(max_it) : 
         
-        distances = euclidean_distance(X, centroids)
+        distances = manhattan_distance(X, centroids)
         labels = np.argmin(distances, axis=1) #cluster numéro
 
 
@@ -45,7 +45,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
 def predict_kmeans(X_test, centroids):
     """Prédit le cluster le plus proche pour de nouvelles données"""
-    distances = euclidean_distance(X_test, centroids)
+    distances = manhattan_distance(X_test, centroids)
     return np.argmin(distances, axis=1)
 
 
@@ -64,7 +64,7 @@ def simple_pca(X, n_components=2):
 
 
 
-def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random_state=42, aff=False):
+def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random_state=42, aff=False, random_state_cluster = None):
     X = data[method]
     y_true = data['labels']          # maintenant 1 à 9
 
@@ -80,7 +80,7 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
     X_test,  y_test  = X[test_idx],  y_true[test_idx]
 
     # 1. Clustering non supervisé sur le train
-    centroids, train_cluster_labels = kmeans_clustering(X_train, k=k_clusters, random_state=0)
+    centroids, train_cluster_labels = kmeans_clustering(X_train, k=k_clusters, random_state=random_state_cluster)
 
     # 2. Mapping cluster → classe réelle par vote majoritaire (sur le train)
     cluster_to_class = {}
@@ -144,14 +144,15 @@ for meth in methodes:
 """
 
 methodes = ['E34', 'GFD', 'SA', 'F0', 'F2']
-print("=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
+print("\n=== Évaluation K-means (non supervisé) avec vote majoritaire ===\n")
 
+print("Evaluation avec la seed = 42 pour le split de la bdd et seed=0 pour le k-means clustering : \n")
 best_results = {}
 for meth in methodes:
     best_acc = -1
     best_k = None
     for k in range(2, 26):  # de 2 à 25
-        acc, _ = evaluate_kmeans_on_method(method=meth, k_clusters=k, test_ratio=0.2, random_state=42)
+        acc, _ = evaluate_kmeans_on_method(method=meth, k_clusters=k, test_ratio=0.2, random_state=42, random_state_cluster=0)
         if acc > best_acc:
             best_acc = acc
             best_k = k
@@ -160,8 +161,37 @@ for meth in methodes:
     # Affichage du meilleur
     print(f"Meilleur résultat pour {meth}: k={best_k}, Accuracy={best_acc:.3f}")
     # Appel pour afficher le print et le plot du meilleur
-    evaluate_kmeans_on_method(method=meth, k_clusters=best_k, test_ratio=0.2, random_state=42, aff=True)
+    evaluate_kmeans_on_method(method=meth, k_clusters=best_k, test_ratio=0.2, random_state=42, aff=True, random_state_cluster=0)
     print("-" * 70)
 
+# Ajout : Tests avec plusieurs seeds différentes
+print("\n=== Évaluation multi-seeds pour robustesse ===\n")
+seeds = [0, 42, 100, 128, 556]  # 5 seeds fixes différentes
 
+best_results_per_seed = {}
+for seed in seeds:
+    print(f"Exécution pour seed {seed}")
+    best_results_seed = {}
+    for meth in methodes:
+        best_acc = -1
+        best_k = None
+        for k in range(2, 26):
+            acc, _ = evaluate_kmeans_on_method(method=meth, k_clusters=k, test_ratio=0.2, random_state=seed, aff=False, random_state_cluster=seed)
+            if acc > best_acc:
+                best_acc = acc
+                best_k = k
+        best_results_seed[meth] = (best_k, best_acc)
+    best_results_per_seed[seed] = best_results_seed
 
+# Calcul des moyennes et écarts-types
+for meth in methodes:
+    best_ks = [best_results_per_seed[seed][meth][0] for seed in seeds]
+    best_accs = [best_results_per_seed[seed][meth][1] for seed in seeds]
+    avg_k = np.mean(best_ks)
+    std_k = np.std(best_ks)
+    avg_acc = np.mean(best_accs)
+    std_acc = np.std(best_accs)
+    print(f"{meth} - Résultats pour les seeds : {seeds}")
+    print(f"   Meilleurs k par seed : {best_ks}")
+    print(f"   Accuracies par seed : {best_accs}")
+    print("-" * 70)
