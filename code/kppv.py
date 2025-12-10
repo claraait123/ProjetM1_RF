@@ -1,22 +1,14 @@
 import numpy as np
 from loadBDshape import data
 
-def distance_euclidienne(x, y):
-    diff = x - y
-    return np.sqrt(np.sum(diff ** 2))
-
-def distance_manhattan(x, y):
-    diff = x - y
-    return np.sum(np.abs(diff))
-
-def distance_minkowski(x, y, p=2):
+def distance_minkowski(x, y, p):
     diff = np.abs(x - y)
     return np.power(np.sum(diff ** p), 1.0 / p)
 
 def k_plus_proches_voisins_x(x, X_train, Y_train, k=3):
     distances = []
     for x_train_i in X_train:
-        distances.append(distance_minkowski(x, x_train_i))
+        distances.append(distance_minkowski(x, x_train_i, 1))
     idx_knn = np.argsort(distances)[:k]
     labels_knn = Y_train[idx_knn]
 

@@ -23,7 +23,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
     for it in range(max_it) : 
         
-        distances = euclidean_distance(X, centroids)
+        distances = manhattan_distance(X, centroids)
         labels = np.argmin(distances, axis=1) #cluster numéro
 
 
