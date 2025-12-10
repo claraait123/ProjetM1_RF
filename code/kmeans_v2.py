@@ -7,7 +7,10 @@ def euclidean_distance(X, centroids):
     return np.sqrt(((X[:, np.newaxis] - centroids) ** 2).sum(axis=2))
 
 def manhattan_distance(X, centroids):
-        return (np.abs((X[:, np.newaxis] - centroids))).sum(axis=2)
+    return (np.abs((X[:, np.newaxis] - centroids))).sum(axis=2)
+
+def minkowski_distance(X, centroids, p=5):
+    return (np.abs(X[:, np.newaxis] - centroids) ** p).sum(axis=2) ** (1 / p)
 
 def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
