@@ -166,32 +166,43 @@ for meth in methodes:
 
 # Ajout : Tests avec plusieurs seeds différentes
 print("\n=== Évaluation multi-seeds pour robustesse ===\n")
-seeds = [0, 42, 100, 128, 556]  # 5 seeds fixes différentes
+seeds = [(0,15), (0,42), (3,100), (32,128), (6,556)]  # 5 seeds fixes différentes
 
-best_results_per_seed = {}
-for seed in seeds:
-    print(f"Exécution pour seed {seed}")
-    best_results_seed = {}
+results_per_seed = {}
+
+for seed_kmeans,seed_split in seeds:
+    print(f"\n→ Split seed = {seed_split} | K-means seed = {seed_kmeans}")
+    current_seed_results = {}
     for meth in methodes:
         best_acc = -1
         best_k = None
         for k in range(2, 26):
-            acc, _ = evaluate_kmeans_on_method(method=meth, k_clusters=k, test_ratio=0.2, random_state=seed, aff=False, random_state_cluster=seed)
+            acc, _ = evaluate_kmeans_on_method(
+                method=meth,
+                k_clusters=k,
+                test_ratio=0.2,
+                random_state=seed_split,          # ← split train/test
+                random_state_cluster=seed_kmeans, # ← init des centroïdes
+                aff=False
+            )
             if acc > best_acc:
                 best_acc = acc
                 best_k = k
-        best_results_seed[meth] = (best_k, best_acc)
-    best_results_per_seed[seed] = best_results_seed
+        current_seed_results[meth] = (best_k, best_acc)
+        print(f"   {meth}: k={best_k}, acc={best_acc:.3f}")
+    results_per_seed[(seed_split, seed_kmeans)] = current_seed_results
 
-# Calcul des moyennes et écarts-types
+
+# -------------------------------------------------------------------
+# Résumé statistique
+# -------------------------------------------------------------------
+print("\n=== Résumé statistique par méthode ===")
 for meth in methodes:
-    best_ks = [best_results_per_seed[seed][meth][0] for seed in seeds]
-    best_accs = [best_results_per_seed[seed][meth][1] for seed in seeds]
-    avg_k = np.mean(best_ks)
-    std_k = np.std(best_ks)
-    avg_acc = np.mean(best_accs)
-    std_acc = np.std(best_accs)
-    print(f"{meth} - Résultats pour les seeds : {seeds}")
-    print(f"   Meilleurs k par seed : {best_ks}")
-    print(f"   Accuracies par seed : {best_accs}")
-    print("-" * 70)
+    ks   = [results_per_seed[sd][meth][0] for sd in results_per_seed]
+    accs = [results_per_seed[sd][meth][1] for sd in results_per_seed]
+
+    print(f"\n{meth} : Les seed sont (seed_split, seed_kmeans) : {seeds}")
+    print(f"   Meilleurs k  : {ks}")
+    print(f"   Accuracies   : {['{:.3f}'.format(a) for a in accs]}")
+    #print(f"   Moyenne k    : {np.mean(ks):.1f} ± {np.std(ks):.1f}")
+    #print(f"   Moyenne acc  : {np.mean(accs):.3f} ± {np.std(accs):.3f}")
