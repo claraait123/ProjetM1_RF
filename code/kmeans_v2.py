@@ -23,7 +23,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
     for it in range(max_it) : 
         
-        distances = manhattan_distance(X, centroids)
+        distances = euclidean_distance(X, centroids)
         labels = np.argmin(distances, axis=1) #cluster numéro
 
 
@@ -107,7 +107,7 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
     # 5. Accuracy
     accuracy = np.mean(y_pred == y_test)
     if aff :
-        print(f"{method} + K-means (k={k_clusters}) → Accuracy test = {accuracy:.3f}")
+        print(f"{method} + K-means (k={k_clusters}) → Taux de reconnaissance (test) = {accuracy:.3f}")
         print(f"   Mapping clusters → classes : {cluster_to_class}")
 
 
@@ -159,7 +159,7 @@ for meth in methodes:
     best_results[meth] = (best_k, best_acc)
     
     # Affichage du meilleur
-    print(f"Meilleur résultat pour {meth}: k={best_k}, Accuracy={best_acc:.3f}")
+    print(f"Meilleur résultat pour {meth}: k = {best_k}, Taux de reconnaissance = {best_acc:.3f}")
     # Appel pour afficher le print et le plot du meilleur
     evaluate_kmeans_on_method(method=meth, k_clusters=best_k, test_ratio=0.2, random_state=42, aff=True, random_state_cluster=0)
     print("-" * 70)
@@ -203,6 +203,6 @@ for meth in methodes:
 
     print(f"\n{meth} : Les seed sont (seed_split, seed_kmeans) : {seeds}")
     print(f"   Meilleurs k  : {ks}")
-    print(f"   Accuracies   : {['{:.3f}'.format(a) for a in accs]}")
+    print(f"   Taux de reconnaissance   : {['{:.3f}'.format(a) for a in accs]}")
     #print(f"   Moyenne k    : {np.mean(ks):.1f} ± {np.std(ks):.1f}")
     #print(f"   Moyenne acc  : {np.mean(accs):.3f} ± {np.std(accs):.3f}")
