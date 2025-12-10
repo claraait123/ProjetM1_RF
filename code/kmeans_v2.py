@@ -23,7 +23,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
     for it in range(max_it) : 
         
-        distances = manhattan_distance(X, centroids)
+        distances = euclidean_distance(X, centroids)
         labels = np.argmin(distances, axis=1) #cluster numéro
 
 
@@ -45,7 +45,7 @@ def kmeans_clustering(X, k=9, max_it=200, random_state=None) :
 
 def predict_kmeans(X_test, centroids):
     """Prédit le cluster le plus proche pour de nouvelles données"""
-    distances = manhattan_distance(X_test, centroids)
+    distances = euclidean_distance(X_test, centroids)
     return np.argmin(distances, axis=1)
 
 
