@@ -31,16 +31,16 @@ def k_plus_proches_voisins_x(x, X_train, Y_train, k=3):
     Retour :
         La classe majoritaire parmi les k plus proches voisins.
     """
-    # Calcul des distances entre x et chaque point de l’ensemble d’apprentissage
+    # calcul des distances entre x et chaque point de l’ensemble d’apprentissage
     distances = [distance_minkowski(x, x_train_i, 1) for x_train_i in X_train]
 
     # Récupération des indices des k plus proches voisins
     idx_knn = np.argsort(distances)[:k]
 
-    # Étiquettes des k voisins
+    # étiquettes des k voisins
     labels_knn = Y_train[idx_knn]
 
-    # Sélection de la classe majoritaire parmi ces voisins
+    # sélection de la classe majoritaire parmi ces voisins
     valeurs, comptes = np.unique(labels_knn, return_counts=True)
     idx_max = np.argmax(comptes)
     return valeurs[idx_max]
@@ -63,18 +63,18 @@ def k_plus_proches_voisins(X_train, y_train, X, k=3):
     return np.array(predictions)
 
 
-# Méthodes de description de la forme
+# méthodes de description de la forme
 METHODES = ['E34', 'GFD', 'SA', 'F0', 'F2']
 liste_k = [1, 3, 5, 7, 9]
 
-# Boucle principale sur chaque méthode
+# boucle principale sur chaque méthode
 for methode in METHODES:
     print(f"\n=== Méthode : {methode} ===")
 
     X = data[methode]
     y = data['labels']
 
-    # Découpage de la base de données en 60 % apprentissage, 20 % validation, 20 % test
+    # découpage de la base de données en 60% apprentissage, 20% validation, 20% test
     n = len(X)
     indices = np.arange(n)
     np.random.seed(0)
@@ -91,7 +91,7 @@ for methode in METHODES:
     X_valid, y_valid = X[valid_idx], y[valid_idx]
     X_test,  y_test  = X[test_idx],  y[test_idx]
 
-    # Sélection du meilleur k selon la performance sur la validation
+    # sélection du meilleur k selon la performance sur la validation
     meilleur_k = None
     meilleure_acc = 0.0
 
@@ -106,7 +106,7 @@ for methode in METHODES:
 
     print(f"Meilleur k pour {methode} = {meilleur_k}, acc validation = {meilleure_acc:.3f}")
 
-    # Évaluation sur la base de test avec le meilleur k trouvé
+    # évaluation sur la base de test avec le meilleur k trouvé
     y_test_pred = k_plus_proches_voisins(X_train, y_train, X_test, k=meilleur_k)
     acc_test = np.mean(y_test_pred == y_test)
     print(f"Taux de reconnaissance test ({methode}, k={meilleur_k}) = {acc_test:.3f}")
