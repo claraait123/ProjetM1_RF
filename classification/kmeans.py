@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from loadBDshape import data
 
 #L'utilisateur choisit la distance qu'il souhaite utiliser pour k-means.
-p_select = int(input("\nChoisissez l'ordre p de la distance de Minkowski : "))
+p_select = int(input("\nChoisissez l'ordre p de la distance de Minkowski pour k-means : "))
 
 print(f"Distance de Minkowski sélectionnée : p = {p_select}")
 if p_select == 1:

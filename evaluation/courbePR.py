@@ -209,11 +209,10 @@ def evaluate_pr_kmeans(methodes, seed_split, seed_kmeans):
         )
 
 
-if __name__ == "__main__":
-    print("=== COURBES PR - kPPV (K=10) et K-means (meilleur k trouvé) ===\n")
+print("=== COURBES PR - kPPV (K=10) et K-means (meilleur k trouvé) ===\n")
 
-    # 1) Courbes PR pour kPPV
-    evaluate_pr_kppv(METHODES, k=K_KPPV, seed_split=SEED_SPLIT)
+# 1) Courbes PR pour kPPV
+evaluate_pr_kppv(METHODES, k=K_KPPV, seed_split=SEED_SPLIT)
 
-    # 2) Courbes PR pour K-means avec meilleur k
-    evaluate_pr_kmeans(METHODES, seed_split=SEED_SPLIT, seed_kmeans=SEED_KMEANS)
+# 2) Courbes PR pour K-means avec meilleur k
+evaluate_pr_kmeans(METHODES, seed_split=SEED_SPLIT, seed_kmeans=SEED_KMEANS)
