@@ -1,4 +1,5 @@
 # ProjetM1_RF
+Par Maria Aydin et Clara Ait Mokhtar, M1 VMI.
 Projet - Reconnaissance des Formes  - M1 Master Informatique – année 2025 / 2026
 
 Ce projet implémente un système de reconnaissance des formes sur la base BDshape (99 formes, 9 classes) décrite par cinq types de descripteurs (E34, GFD, SA, F0, F2). Les données sont chargées en matrices NumPy, puis évaluées avec un classifieur k plus proches voisins (k-PPV) supervisé et une approche k‑means non supervisée. Les métriques (accuracy, matrice de confusion, F1) y sont inclus.
