@@ -128,7 +128,7 @@ def load_bdshape_data() -> List[Dict]:
 
 
 # ================================
-# Conversion en matrices (pour scikit-learn, etc.)
+# Conversion en matrices
 # ================================
 
 def samples_to_arrays(samples: List[Dict]) -> Dict[str, np.ndarray]:
