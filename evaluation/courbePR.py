@@ -14,7 +14,7 @@ sys.path.append(CODE_DIR)
 
 from loadBDshape import data
 from kppv import k_plus_proches_voisins
-from kmeans_v2 import kmeans_clustering, predict_kmeans, best_results
+from kmeans import kmeans_clustering, predict_kmeans, best_results
 
 
 # ======================================================================
