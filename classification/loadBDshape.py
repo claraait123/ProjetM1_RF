@@ -29,12 +29,6 @@ METHODES_DIM = {
 }
 
 
-#def get_all_met_files():
-#    """Renvoie la liste de tous les fichiers .MET présents dans les sous-dossiers """
-#    return [f for method in METHODES for f in (BDD_DIR / method).glob(f"S??N???.{method}")]
-
-
-
 def read_met_file(filepath):
     """Lit un fichier .MET et retourne un vecteur numpy de float."""
     with open(filepath, 'r', encoding='utf-8') as f:
