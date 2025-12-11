@@ -244,10 +244,9 @@ MEILLEUR_KS = {
     'F2':  5,
 }
 
-if __name__ == "__main__":
-    for meth in METHODES:
-        k_opt = MEILLEUR_KS[meth]
-        # Évaluation kPPV avec le meilleur k trouvé
-        _ = evaluation_kppv(meth, k=k_opt, seed=0)
-        # Évaluation K-means avec k_clusters fixé à 9
-        _ = evaluation_kmeans(meth, k_clusters=9, test_ratio=0.2, random_state=42)
+for meth in METHODES:
+    k_opt = MEILLEUR_KS[meth]
+    # Évaluation kPPV avec le meilleur k trouvé
+    _ = evaluation_kppv(meth, k=k_opt, seed=0)
+    # Évaluation K-means avec k_clusters fixé à 9
+    _ = evaluation_kmeans(meth, k_clusters=9, test_ratio=0.2, random_state=42)
