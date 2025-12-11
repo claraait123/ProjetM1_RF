@@ -88,14 +88,14 @@ def evaluation_from_confusion(M):
 
 def accuracy_score(y_true, y_pred):
     """
-    Calcule l'accuracy (taux global de bonnes prédictions).
+    Calcule le taux de reconnaissance.
 
     Paramètres :
         y_true (array-like) : Étiquettes réelles.
         y_pred (array-like) : Étiquettes prédites.
 
     Retour :
-        float : Accuracy.
+        float : Taux de reconnaissance.
     """
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -116,7 +116,7 @@ def evaluation_kppv(methode, k=1, seed=0):
         seed (int)    : Graine aléatoire pour le découpage des données.
 
     Retour :
-        acc (float)        : Accuracy sur la base de test.
+        acc (float)        : Taux de reconnaissance sur la base de test.
         M (ndarray)        : Matrice de confusion.
         f1s (ndarray)      : F1 par classe.
         f1_macro (float)   : F1 macro.
@@ -150,7 +150,7 @@ def evaluation_kppv(methode, k=1, seed=0):
     M = confusion_matrix(y_test, y_test_pred, n_classes=9)
     precisions, rappels, f1s, f1_macro = evaluation_from_confusion(M)
 
-    print(f"Taux de reconnaissance (accuracy) = {acc:.3f}")
+    print(f"Taux de reconnaissance = {acc:.3f}")
     print("Matrice de confusion :\n", M)
     print("F1 par classe :", np.round(f1s, 3))
     print(f"F1 macro = {f1_macro:.3f}")
@@ -173,7 +173,7 @@ def evaluation_kmeans(methode, k_clusters=9, test_ratio=0.2, random_state=42):
         random_state (int): Graine aléatoire pour split et K-means.
 
     Retour :
-        acc (float)                    : Accuracy sur le test.
+        acc (float)                    : Taux de reconnaissance sur le test.
         M (ndarray)                    : Matrice de confusion.
         f1s (ndarray)                  : F1 par classe.
         f1_macro (float)               : F1 macro.
@@ -223,7 +223,7 @@ def evaluation_kmeans(methode, k_clusters=9, test_ratio=0.2, random_state=42):
     M = confusion_matrix(y_test, y_pred, n_classes=9)
     precisions, rappels, f1s, f1_macro = evaluation_from_confusion(M)
 
-    print(f"Taux de reconnaissance (accuracy) = {acc:.3f}")
+    print(f"Taux de reconnaissance = {acc:.3f}")
     print("Matrice de confusion :\n", M)
     print("F1 par classe :", np.round(f1s, 3))
     print(f"F1 macro = {f1_macro:.3f}")

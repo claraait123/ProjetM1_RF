@@ -15,7 +15,7 @@ from kppv import k_plus_proches_voisins, METHODES, liste_k
 
 def accuracy_par_classe(y_true, y_pred):
     """
-    Calcule l'accuracy (taux de bonnes prédictions) pour chaque classe.
+    Calcule le taux de reconnaissance (taux de bonnes prédictions) pour chaque classe.
 
     Paramètres :
         y_true (ndarray) : Étiquettes réelles.
@@ -37,7 +37,7 @@ def accuracy_par_classe(y_true, y_pred):
             # Aucun exemple de cette classe dans y_true
             acc_classes[c] = np.nan
         else:
-            # Accuracy = (nombre de bonnes prédictions sur cette classe) / (nombre total d'exemples de cette classe)
+            # Taux de reconnaissance / (nombre total d'exemples de cette classe)
             acc_classes[c] = np.mean(y_pred[idx_c] == y_true[idx_c])
 
     return acc_classes
@@ -98,9 +98,9 @@ if __name__ == "__main__":
     y_test_global = np.concatenate(y_test_global)
     y_pred_global = np.concatenate(y_pred_global)
 
-    # Accuracy moyenne par classe (toutes méthodes confondues)
+    # Taux de reconnaissance moyen par classe (toutes méthodes confondues)
     acc_classes = accuracy_par_classe(y_test_global, y_pred_global)
 
-    print("\n=== Accuracy moyenne par classe (global, toutes méthodes) ===")
+    print("\n=== Taux de reconnaissance moyen par classe (global, toutes méthodes) ===")
     for c in sorted(acc_classes.keys()):
         print(f"Classe {c} : {acc_classes[c]:.3f}")

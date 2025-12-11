@@ -140,8 +140,8 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
         random_state_cluster    : Seed pour l'initialisation des centroïdes dans kmeans_clustering.
 
     Retour :
-        accuracy (float)        : Taux de bonne classification sur le test.
-        cluster_to_class (dict) : Dictionnaire {id_cluster: classe_majoritaire}.
+        Taux de reconnaissance (float) : Taux de bonne classification sur le test.
+        cluster_to_class (dict)        : Dictionnaire {id_cluster: classe_majoritaire}.
     """
 
     X = data[method]
@@ -195,7 +195,7 @@ def evaluate_kmeans_on_method(method='E34', k_clusters=9, test_ratio=0.2, random
         
         #### Affichage avec matplotlib des nuages de points généré par Grok.
 
-        print(f"{method} + K-means (k={k_clusters}) → Accuracy test = {accuracy:.3f}")
+        print(f"{method} + K-means (k={k_clusters}) → Taux de reconnaissance test = {accuracy:.3f}")
         print(f"   Mapping clusters → classes : {cluster_to_class}")
 
         # Visualisation des clusters en 2D via PCA (sur le train)
@@ -253,7 +253,7 @@ for meth in methodes:
     best_results[meth] = (best_k, best_acc)
 
     # Affichage du meilleur résultat
-    print(f"Meilleur résultat pour {meth} : k={best_k}, Accuracy={best_acc:.3f}")
+    print(f"Meilleur résultat pour {meth} : k={best_k}, Taux de reconnaissance={best_acc:.3f}")
 
     # Appel avec aff=True pour afficher les détails + plot
     evaluate_kmeans_on_method(
