@@ -9,7 +9,7 @@ from sklearn.metrics import precision_recall_curve, auc
 # ======================================================================
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-CODE_DIR = os.path.join(CURRENT_DIR, "..", "code")
+CODE_DIR = os.path.join(CURRENT_DIR, "..", "classification")
 sys.path.append(CODE_DIR)
 
 from loadBDshape import data

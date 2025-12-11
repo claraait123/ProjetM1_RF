@@ -6,7 +6,7 @@ import os
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Ajout du dossier ../code au PYTHONPATH pour pouvoir importer les modules
-CODE_DIR = os.path.join(CURRENT_DIR, "..", "code")
+CODE_DIR = os.path.join(CURRENT_DIR, "..", "classification")
 sys.path.append(CODE_DIR)
 
 from loadBDshape import data
