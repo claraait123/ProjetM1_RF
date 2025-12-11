@@ -62,7 +62,7 @@ ProjetRF2025/
 
 # Execution
 
-A executer dans le dossier ou se trouve le fichier : 
+A executer dans le dossier où se trouve le fichier : 
 
 python3 script.py
 
