@@ -12,10 +12,10 @@ sys.path.append(CODE_DIR)
 
 from loadBDshape import data
 from kppv import k_plus_proches_voisins
-from kmeans import kmeans_clustering, predict_kmeans
-from kmeans import best_results
+from kmeans import kmeans_clustering, predict_kmeans, best_results
 
 
+# Méthodes de description utilisées
 METHODES = ['E34', 'GFD', 'SA', 'F0', 'F2']
 
 
@@ -30,7 +30,8 @@ def confusion_matrix(y_true, y_pred, n_classes=None):
     Paramètres :
         y_true (array-like)  : Étiquettes réelles.
         y_pred (array-like)  : Étiquettes prédites.
-        n_classes (int|None) : Nombre de classes (si None, déduit de y_true/y_pred).
+        n_classes (int|None) : Nombre de classes.
+                               Si None, déduit de y_true et y_pred.
 
     Retour :
         ndarray (n_classes, n_classes) :
@@ -89,7 +90,7 @@ def evaluation_from_confusion(M):
 
 def accuracy_score(y_true, y_pred):
     """
-    Calcule le taux de reconnaissance.
+    Calcule le taux de reconnaissance (accuracy).
 
     Paramètres :
         y_true (array-like) : Étiquettes réelles.
@@ -117,15 +118,15 @@ def evaluation_kppv(methode, k=1, seed=0):
         seed (int)    : Graine aléatoire pour le découpage des données.
 
     Retour :
-        acc (float)        : Taux de reconnaissance sur la base de test.
-        M (ndarray)        : Matrice de confusion.
-        f1s (ndarray)      : F1 par classe.
-        f1_macro (float)   : F1 macro.
+        acc (float)      : Taux de reconnaissance sur la base de test.
+        M (ndarray)      : Matrice de confusion.
+        f1s (ndarray)    : F1 par classe.
+        f1_macro (float) : F1 macro.
     """
     X = data[methode]
     y = data['labels']
 
-    # Découpage 60 % train, 20 % validation, 20 % test (ici on n'utilise que train + test)
+    # Découpage 60 % train, 20 % validation, 20 % test (validation non utilisée ici)
     n = len(X)
     indices = np.arange(n)
     np.random.seed(seed)
@@ -135,7 +136,7 @@ def evaluation_kppv(methode, k=1, seed=0):
     n_valid = int(0.2 * n)
 
     train_idx = indices[:n_train]
-    valid_idx = indices[n_train:n_train + n_valid]
+    valid_idx = indices[n_train:n_train + n_valid]  # gardé pour cohérence du split
     test_idx = indices[n_train + n_valid:]
 
     X_train, y_train = X[train_idx], y[train_idx]
@@ -149,7 +150,7 @@ def evaluation_kppv(methode, k=1, seed=0):
     # Calcul des métriques
     acc = accuracy_score(y_test, y_test_pred)
     M = confusion_matrix(y_test, y_test_pred, n_classes=9)
-    precisions, rappels, f1s, f1_macro = evaluation_from_confusion(M)
+    _, _, f1s, f1_macro = evaluation_from_confusion(M)
 
     print(f"Taux de reconnaissance = {acc:.3f}")
     print("Matrice de confusion :\n", M)
@@ -163,16 +164,34 @@ def evaluation_kppv(methode, k=1, seed=0):
 # Évaluation K-means
 # ======================================================================
 
-# K-MEANS : on utilise le meilleur k déjà trouvé dans kmeans.py
 def evaluation_kmeans(methode, random_state_split=42, random_state_cluster=0):
-    best_k, best_acc_ref = best_results[methode]  # On récupère le meilleur k déjà calculé
+    """
+    Évalue un K-means supervisé a posteriori (mapping cluster → classe)
+    en utilisant le meilleur k déjà trouvé dans kmeans.py.
 
-    print(f"\n=== Évaluation K-means sur {methode} avec le MEILLEUR k = {best_k} "
-          f"(trouvé avec seed_split=42, seed_cluster=0) ===")
+    Paramètres :
+        methode (str)         : Nom de la méthode ('E34', 'GFD', 'SA', 'F0', 'F2').
+        random_state_split    : Graine pour le split train/test.
+        random_state_cluster  : Graine pour l'initialisation de K-means.
+
+    Retour :
+        acc (float)      : Accuracy sur le test.
+        f1_macro (float) : F1 macro.
+        M (ndarray)      : Matrice de confusion.
+        f1s (ndarray)    : F1 par classe.
+    """
+    # On récupère le meilleur k et son accuracy de référence
+    best_k, best_acc_ref = best_results[methode]
+
+    print(
+        f"\n=== Évaluation K-means sur {methode} avec le MEILLEUR k = {best_k} "
+        f"(trouvé avec seed_split=42, seed_cluster=0) ==="
+    )
 
     X = data[methode]
     y_true = data['labels']
 
+    # Split train/test : 80 % train / 20 % test
     n = len(X)
     np.random.seed(random_state_split)
     indices = np.random.permutation(n)
@@ -181,30 +200,34 @@ def evaluation_kmeans(methode, random_state_split=42, random_state_cluster=0):
     train_idx = indices[n_test:]
 
     X_train, y_train = X[train_idx], y_true[train_idx]
-    X_test, y_test = X[test_idx], y_true[test_idx]
+    X_test,  y_test  = X[test_idx],  y_true[test_idx]
 
-    # Clustering
-    centroids, train_labels = kmeans_clustering(X_train, k=best_k, max_it=200, random_state=random_state_cluster)
+    # 1. Clustering non supervisé sur le train
+    centroids, train_labels = kmeans_clustering(
+        X_train, k=best_k, max_it=200, random_state=random_state_cluster
+    )
 
-    # Mapping cluster → classe
+    # 2. Mapping cluster → classe par vote majoritaire
     cluster_to_class = {}
     for cid in range(best_k):
         mask = (train_labels == cid)
         if mask.sum() > 0:
             cluster_to_class[cid] = np.bincount(y_train[mask]).argmax()
         else:
-            cluster_to_class[cid] = -1
+            cluster_to_class[cid] = -1  # cluster vide
 
-    # Prédiction test
+    # 3. Prédiction des clusters sur le test
     test_labels = predict_kmeans(X_test, centroids)
+
+    # 4. Conversion clusters → classes
     y_pred = np.array([cluster_to_class.get(c, -1) for c in test_labels])
 
-    # Métriques
+    # 5. Métriques
     acc = accuracy_score(y_test, y_pred)
-    M = confusion_matrix(y_test, y_pred)
+    M = confusion_matrix(y_test, y_pred, n_classes=9)
     _, _, f1s, f1_macro = evaluation_from_confusion(M)
 
-    print(f"Accuracy (confirmée) : {acc:.3f} (référence dans kmeans_v2: {best_acc_ref:.3f})")
+    print(f"Accuracy (confirmée) : {acc:.3f} (référence dans kmeans_v2 : {best_acc_ref:.3f})")
     print("Matrice de confusion :\n", M)
     print("F1 par classe :", np.round(f1s, 3))
     print(f"F1-macro : {f1_macro:.3f}")
@@ -214,7 +237,7 @@ def evaluation_kmeans(methode, random_state_split=42, random_state_cluster=0):
 
 
 # ======================================================================
-# Lancement des évaluations
+# Lancement des évaluations (appelées depuis un autre script si besoin)
 # ======================================================================
 
 MEILLEUR_KS = {
@@ -224,7 +247,6 @@ MEILLEUR_KS = {
     'F0':  3,
     'F2':  5,
 }
-
 for meth in METHODES:
     k_opt = MEILLEUR_KS[meth]
     # Évaluation kPPV avec le meilleur k trouvé
