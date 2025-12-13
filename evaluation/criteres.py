@@ -13,6 +13,7 @@ sys.path.append(CODE_DIR)
 from loadBDshape import data
 from kppv import k_plus_proches_voisins
 from kmeans import kmeans_clustering, predict_kmeans
+from kmeans import best_results
 
 
 METHODES = ['E34', 'GFD', 'SA', 'F0', 'F2']
@@ -162,74 +163,54 @@ def evaluation_kppv(methode, k=1, seed=0):
 # Évaluation K-means
 # ======================================================================
 
-def evaluation_kmeans(methode, k_clusters=9, test_ratio=0.2, random_state=42):
-    """
-    Évalue un K-means supervisé a posteriori (mapping cluster → classe) sur une méthode.
+# K-MEANS : on utilise le meilleur k déjà trouvé dans kmeans.py
+def evaluation_kmeans(methode, random_state_split=42, random_state_cluster=0):
+    best_k, best_acc_ref = best_results[methode]  # On récupère le meilleur k déjà calculé
 
-    Paramètres :
-        methode (str)    : Nom de la méthode ('E34', 'GFD', 'SA', 'F0', 'F2').
-        k_clusters (int) : Nombre de clusters K-means.
-        test_ratio (float): Proportion de données en test (le reste en train).
-        random_state (int): Graine aléatoire pour split et K-means.
+    print(f"\n=== Évaluation K-means sur {methode} avec le MEILLEUR k = {best_k} "
+          f"(trouvé avec seed_split=42, seed_cluster=0) ===")
 
-    Retour :
-        acc (float)                    : Taux de reconnaissance sur le test.
-        M (ndarray)                    : Matrice de confusion.
-        f1s (ndarray)                  : F1 par classe.
-        f1_macro (float)               : F1 macro.
-        cluster_to_class (dict[int,int]): Mapping cluster → classe.
-    """
     X = data[methode]
     y_true = data['labels']
 
-    # Split train / test (sans validation ici)
     n = len(X)
-    np.random.seed(random_state)
+    np.random.seed(random_state_split)
     indices = np.random.permutation(n)
-
-    n_test = int(test_ratio * n)
+    n_test = int(0.2 * n)
     test_idx = indices[:n_test]
     train_idx = indices[n_test:]
 
     X_train, y_train = X[train_idx], y_true[train_idx]
-    X_test,  y_test  = X[test_idx],  y_true[test_idx]
+    X_test, y_test = X[test_idx], y_true[test_idx]
 
-    print(f"\n=== Évaluation K-means sur {methode} (k={k_clusters}) ===")
+    # Clustering
+    centroids, train_labels = kmeans_clustering(X_train, k=best_k, max_it=200, random_state=random_state_cluster)
 
-    # 1. Clustering non supervisé sur le train
-    centroids, train_cluster_labels = kmeans_clustering(
-        X_train, k=k_clusters, max_it=200, random_state=random_state
-    )
-
-    # 2. Mapping cluster → classe par vote majoritaire sur y_train
+    # Mapping cluster → classe
     cluster_to_class = {}
-    for cluster_id in range(k_clusters):
-        mask = (train_cluster_labels == cluster_id)
+    for cid in range(best_k):
+        mask = (train_labels == cid)
         if mask.sum() > 0:
-            unique_labels, counts = np.unique(y_train[mask], return_counts=True)
-            most_common = unique_labels[np.argmax(counts)]
-            cluster_to_class[cluster_id] = most_common
+            cluster_to_class[cid] = np.bincount(y_train[mask]).argmax()
         else:
-            cluster_to_class[cluster_id] = -1  # cluster vide
+            cluster_to_class[cid] = -1
 
-    # 3. Prédiction des clusters sur le test
-    test_cluster_labels = predict_kmeans(X_test, centroids)
+    # Prédiction test
+    test_labels = predict_kmeans(X_test, centroids)
+    y_pred = np.array([cluster_to_class.get(c, -1) for c in test_labels])
 
-    # 4. Conversion clusters → classes prédictes
-    y_pred = np.array([cluster_to_class.get(c, -1) for c in test_cluster_labels])
-
-    # 5. Calcul des métriques
+    # Métriques
     acc = accuracy_score(y_test, y_pred)
-    M = confusion_matrix(y_test, y_pred, n_classes=9)
-    precisions, rappels, f1s, f1_macro = evaluation_from_confusion(M)
+    M = confusion_matrix(y_test, y_pred)
+    _, _, f1s, f1_macro = evaluation_from_confusion(M)
 
-    print(f"Taux de reconnaissance = {acc:.3f}")
+    print(f"Accuracy (confirmée) : {acc:.3f} (référence dans kmeans_v2: {best_acc_ref:.3f})")
     print("Matrice de confusion :\n", M)
     print("F1 par classe :", np.round(f1s, 3))
-    print(f"F1 macro = {f1_macro:.3f}")
-    print("Mapping clusters -> classes :", cluster_to_class)
+    print(f"F1-macro : {f1_macro:.3f}")
+    print(f"Mapping clusters → classes : {cluster_to_class}")
 
-    return acc, M, f1s, f1_macro, cluster_to_class
+    return acc, f1_macro, M, f1s
 
 
 # ======================================================================
@@ -249,4 +230,4 @@ for meth in METHODES:
     # Évaluation kPPV avec le meilleur k trouvé
     _ = evaluation_kppv(meth, k=k_opt, seed=0)
     # Évaluation K-means avec k_clusters fixé à 9
-    _ = evaluation_kmeans(meth, k_clusters=9, test_ratio=0.2, random_state=42)
+    _ = evaluation_kmeans(meth)
